@@ -24,39 +24,55 @@ public class KitchenHatchImpl implements KitchenHatch{
 	}
 
 	@Override
-	synchronized public Order dequeueOrder(long timeout) throws InterruptedException {
-		while(orders.isEmpty())
-				wait(timeout);
+	public Order dequeueOrder(long timeout) throws InterruptedException {
+		synchronized (orders){
+			while(orders.isEmpty())
+				orders.wait(timeout);
 
-		return orders.pollFirst();
+			var removedOrder = orders.pollFirst();
+			System.out.println("ORDER " + removedOrder.getMealName() + " removed");
+
+			return orders.pollFirst();
+
+		}
 	}
 
 	@Override
-	synchronized public int getOrderCount() {
-		return orders.size();
+	public int getOrderCount() {
+		synchronized (orders){
+			return orders.size();
+		}
 	}
 
 	@Override
-	synchronized public Dish dequeueDish(long timeout) throws InterruptedException {
-		while(dishes.isEmpty())
-			wait(timeout);
+	public Dish dequeueDish(long timeout) throws InterruptedException {
+		synchronized (dishes){
+			while(dishes.isEmpty())
+				dishes.wait(timeout);
 
-		var removedDish = dishes.pollFirst();
-		notifyAll();
-		return removedDish;
+			var removedDish = dishes.pollFirst();
+			System.out.println("Dish " + removedDish.getMealName() + " removed");
+			dishes.notifyAll();
+			return removedDish;
+		}
 	}
 
 	@Override
-	synchronized public void enqueueDish(Dish m) throws InterruptedException {
-		while(dishes.size() >= getMaxDishes())
-			wait();
+	public void enqueueDish(Dish m) throws InterruptedException {
+		synchronized (dishes){
+			while(dishes.size() >= getMaxDishes())
+				dishes.wait();
 
-		dishes.addLast(m);
-		notifyAll();
+			dishes.addLast(m);
+			System.out.println("Dish " + m.getMealName() + " added");
+			dishes.notifyAll();
+		}
 	}
 
 	@Override
-	synchronized public int getDishesCount() {
-		return dishes.size();
+	public int getDishesCount() {
+		synchronized (dishes){
+			return dishes.size();
+		}
 	}
 }

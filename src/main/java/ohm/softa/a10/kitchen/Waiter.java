@@ -1,5 +1,6 @@
 package ohm.softa.a10.kitchen;
 
+import javafx.css.StyleableStringProperty;
 import ohm.softa.a10.internals.displaying.ProgressReporter;
 import ohm.softa.a10.model.Dish;
 
@@ -18,23 +19,19 @@ public class Waiter implements Runnable{
 
 	@Override
 	public void run() {
-		Dish dish = null;
-		try {
-			dish = kitchenHatch.dequeueDish();
-		} catch (InterruptedException e) {
-			throw new RuntimeException(e);
-		}
-
-		while(!dish.equals(null)){
-			try {
-				Thread.sleep(new Random().nextInt(1000));
+		var random = new Random();
+		while (kitchenHatch.getDishesCount() > 0 || kitchenHatch.getOrderCount() > 0){
+			try{
+				var dish = kitchenHatch.dequeueDish();
+				if(dish.equals(null))
+					break;
+				Thread.sleep(random.nextInt(10000));
 				progressReporter.updateProgress();
-				dish = kitchenHatch.dequeueDish();
-			} catch (InterruptedException e) {
-				throw new RuntimeException(e);
+			}catch(Exception e){
+				e.printStackTrace(System.out);
 			}
-
 		}
+
 		progressReporter.notifyWaiterLeaving();
 	}
 }
